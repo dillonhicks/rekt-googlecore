@@ -1,0 +1,75 @@
+name: GooglePlaces
+base_url : "https://maps.googleapis.com/maps/api/place"
+apis :
+ Places :
+   url : "/nearbysearch/json"
+   GET :
+     key:
+     location  : { default : null }
+     radius    : { default : null }
+     rankby    : { default : null }
+     keyword   : { default : null }
+     language  : { default : null }
+     minprice  : { default : null }
+     maxprice  : { default : null }
+     name      : { default : null }
+     opennow   : { default : null }
+     types     : { default : null }
+     pagetoken : { default : null }
+     zagatselected : { default : null }
+   POST :
+     key : { location : query_string }
+     accuracy :
+     name :
+     address : { default : null }
+     language : { default : null }
+     location :
+     phone_number : { default : null }
+     types :
+     website :
+   DELETE :
+     key  :
+     place_id :
+ Details :
+   url : "/details/json"
+   GET  :
+     key : { location : query_string }
+     placeid :
+     reference  : { default : null }
+     extensions : { default : null }
+     language   : { default : null }
+ PlacesAutoComplete :
+   url : "/autocomplete/json"
+   GET :
+     key : { location : query_string }
+     input :
+     offset     : { default : null }
+     location   : { default : null }
+     radius     : { default : null }
+     types      : { default : null }
+     language   : { default : null }
+     components : { default : null }
+ QueryAutoComplete :
+   url : "/queryautocomplete/json"
+   GET :
+     key :
+     input :
+     offset     : { default : null }
+     location   : { default : null }
+     radius     : { default : null }
+     language   : { default : null }
+ TextSearch :
+   url : "/textsearch/json"
+   GET :
+     key :
+     query :
+     location  : { default : null }
+     radius    : { default : null }
+     rankby    : { default : null }
+     language  : { default : null }
+     minprice  : { default : null }
+     maxprice  : { default : null }
+     opennow   : { default : null }
+     types     : { default : null }
+     pagetoken : { default : null }
+     zagatselected : { default : null }

@@ -1,2 +1,2 @@
 # rekt_google_core
-Base package for google rest stuff
+Base package for google rest api stuff
