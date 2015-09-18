@@ -6,7 +6,7 @@ from pkg_resources import resource_filename
 
 import rekt
 from rekt.service import RestClient
-from rekt.utils import load_config, api_method_names
+from rekt.utils import load_config, api_method_names, _ASYNC_METHOD_PREFIX
 
 from .errors  import Status, exceptions_by_status
 
@@ -24,10 +24,11 @@ class GoogleAPIClient(RestClient):
     the exception class GoogleAPIError for a catch all.
     """
     def __init__(self, rekt_google_module, api_key):
+        RestClient.__init__(self)
+
         self._api_key = api_key
         self._rekt_client = rekt_google_module.Client()
         api_methods = api_method_names(rekt_google_module.resources)
-
 
         def build_wrapped_api_method(method_name):
             raw_api_method = getattr(self._rekt_client, method_name)
@@ -47,6 +48,28 @@ class GoogleAPIClient(RestClient):
 
             return api_call_func
 
+        def build_wrapped_async_api_method(method_name):
+
+            raw_api_method_name = method_name.replace(_ASYNC_METHOD_PREFIX, '')
+
+            def api_call_func(self, **kwargs):
+                raw_api_method = getattr(self, raw_api_method_name)
+
+                def _async_call_handler():
+                    return raw_api_method(**kwargs)
+
+                return self._rekt_client._executor.submit(_async_call_handler)
+
+            api_call_func.__name__ = method_name
+            api_call_func.__doc__ = getattr(self._rekt_client, raw_api_method_name).__doc__
+
+            return api_call_func
+
+
         for method_name in api_methods:
-            new_method = build_wrapped_api_method(method_name)
+            if method_name.startswith(_ASYNC_METHOD_PREFIX):
+                new_method = build_wrapped_async_api_method(method_name)
+            else:
+                new_method = build_wrapped_api_method(method_name)
+
             setattr(self, method_name, types.MethodType(new_method, self))
