@@ -13,6 +13,8 @@ from .errors  import Status, exceptions_by_status
 __all__ = ['GoogleAPIClient']
 
 
+_API_KEY_ARG_NAME = 'key'
+
 class GoogleAPIClient(RestClient):
     """
     Base for google api clients that is primed with the api key so you
