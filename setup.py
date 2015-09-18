@@ -21,7 +21,7 @@ with open('requirements.txt', 'r') as f:
     requirements = [r for r in requirements if not any([r.startswith('git'), r.startswith('http')])]
 
 setup(
-    name='rekt-google-core',
+    name='rekt-googlecore',
     version=version,
     url='http://github.com/vengefuldrx/rekt-google-core/',
     license='Apache License Version 2',
