@@ -1,5 +1,7 @@
 import types
+import time
 from itertools import chain
+from functools import partial
 from pathlib import Path, PurePath
 
 from pkg_resources import resource_filename
@@ -9,11 +11,14 @@ from rekt.service import RestClient
 from rekt.utils import load_config, api_method_names, _ASYNC_METHOD_PREFIX
 
 from .errors  import Status, exceptions_by_status
+from .errors import InvalidRequestError
 
 __all__ = ['GoogleAPIClient']
 
-
 _API_KEY_ARG_NAME = 'key'
+_PAGETOKEN_ARG_NAME = 'pagetoken'
+_MAX_PAGES = 3
+_MILLIS_PER_SEC = 1000
 
 class GoogleAPIClient(RestClient):
     """
@@ -73,3 +78,56 @@ class GoogleAPIClient(RestClient):
                 new_method = build_wrapped_api_method(method_name)
 
             setattr(self, method_name, types.MethodType(new_method, self))
+
+
+#TODO: Genericize time parameters and errors.
+def exponential_retry(call):
+    """
+    Retry on an InvalidRequestError which will happen if a pagetoken is used before that pagetoken becomes valid.
+    """
+    base_wait = 200 # ms
+    max_wait = 1000 # ms
+
+    last_exception = None
+
+    for attempt in range(4):
+        try:
+            return call()
+        except InvalidRequestError as e:
+            last_exception = e
+            wait_time = (1 << attempt) * base_wait
+            wait_time = min(wait_time, max_wait) # box wait time by the max wait
+            wait_time /= _MILLIS_PER_SEC
+            time.sleep(wait_time)
+
+    raise last_exception
+
+
+def paginate_responses(call, max_pages=_MAX_PAGES):
+    """
+    Assumes that call is the curried api method with the initial
+    arguments. This will make a generator based on the api calls that
+    require a page token to paginate results. This returned generator
+    will yeild a response for each call it is on the caller to do the
+    appropriate chaining of results.
+    """
+    next_page_token = None
+
+    for _ in range(max_pages):
+
+        if next_page_token is None:
+            # Do not retry the initial call incase the intial args are bogus
+            response = call()
+        else:
+            # Args are ignored when the pagetoken is given so we have
+            # a guarantee that the InvalidRequestError is because the
+            # pagetoken is not yet active versus just run of the mill
+            # bad params.
+            call_with_pagetoken = partial(call, **{_PAGETOKEN_ARG_NAME : next_page_token})
+            response = exponential_retry(call_with_pagetoken)
+
+        yield response
+
+        next_page_token = response.next_page_token
+        if next_page_token is None:
+            break

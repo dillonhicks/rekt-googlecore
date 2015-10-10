@@ -1,4 +1,4 @@
-__version__ = '0.2015.9.18.4'
+__version__ = '0.2015.10.10'
 
 from .client import GoogleAPIClient
 from .errors import *
