@@ -44,7 +44,8 @@ class GoogleAPIClient(RestClient):
                 status = Status[response.status.lower()]
 
                 if status in exceptions_by_status:
-                    raise exceptions_by_status[status](response.error_message, response)
+                    kwargs.pop(_API_KEY_ARG_NAME, None)
+                    raise exceptions_by_status[status](raw_api_method.__name__, kwargs.items(), response.error_message, response)
 
                 return response
 
@@ -85,12 +86,12 @@ def exponential_retry(call):
     """
     Retry on an InvalidRequestError which will happen if a pagetoken is used before that pagetoken becomes valid.
     """
-    base_wait = 200 # ms
-    max_wait = 1000 # ms
+    base_wait = 333 # ms
+    max_wait = 2000 # ms
 
     last_exception = None
 
-    for attempt in range(4):
+    for attempt in range(5):
         try:
             return call()
         except InvalidRequestError as e:

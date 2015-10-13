@@ -21,12 +21,14 @@ class Status(Enum):
         return frozenset({s for s in Status if not s == Status.ok})
 
 class GoogleAPIError(Exception):
-    def __init__(self, error_message, response):
+    def __init__(self, api, args, error_message, response):
+        self.api = api
+        self.args = args
         self.error_message = error_message
         self.response = response
 
     def __str__(self):
-        return '{}(error_message={})'.format(self.__class__.__name__, repr(self.error_message))
+        return '{}(api={}, args={}, error_message={})'.format(self.__class__.__name__, self.api, self.args, repr(self.error_message))
 
     def __repr__(self):
         return '<{}>'.format(str(self))
@@ -34,8 +36,8 @@ class GoogleAPIError(Exception):
 
 def _exception_class_for_status(status, BaseClass=GoogleAPIError):
 
-    def __init__(self, error_message, response):
-        BaseClass.__init__(self, error_message, response)
+    def __init__(self, api, args, error_message, response):
+        BaseClass.__init__(self, api, args, error_message, response)
 
     exception_name = _EXCEPTION_CLASS_NAME_FMT.format(snake_case_to_camel_case(status.value))
     ExceptionClass = type(exception_name, (BaseClass,), {'__init__' : __init__})
