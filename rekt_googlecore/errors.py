@@ -15,6 +15,7 @@ class Status(Enum):
     invalid_request = 'INVALID_REQUEST'
     not_found = 'NOT_FOUND'
 
+
     @staticmethod
     @lru_cache(maxsize=1)
     def errors():

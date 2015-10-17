@@ -41,7 +41,10 @@ class GoogleAPIClient(RestClient):
             def api_call_func(self, **kwargs):
                 kwargs[_API_KEY_ARG_NAME] = self._api_key
                 response =  raw_api_method(**kwargs)
-                status = Status[response.status.lower()]
+                try:
+                    status = Status[response.status.lower()]
+                except (AttributeError, KeyError) as e:                   
+                    status = Status.ok
 
                 if status in exceptions_by_status:
                     kwargs.pop(_API_KEY_ARG_NAME, None)
